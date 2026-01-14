@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  name              String?
+  avatarUrl         String?
+  passwordHash      String?   // Null for magic link only users
+  emailVerified     Boolean   @default(false)
+  emailUpdatesOptIn Boolean   @default(false) // Whether user wants email notifications
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLoginAt       DateTime?
+
+  // Relations
+  sessions          Session[]
+  magicLinks        MagicLink[]
+  bookmarks         Bookmark[]
+  ratings           Rating[]
+  subscriptions     Subscription[]
+  readingProgress   ReadingProgress[]
+  viewHistory       ViewHistory[]
+
+  @@index([email])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model MagicLink {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ============================================
+// MANGA INTERACTIONS
+// ============================================
+
+model Bookmark {
+  id           String   @id @default(uuid())
+  userId       String
+  mangaUid     String   // Contentstack manga UID
+  mangaSlug    String
+  mangaTitle   String
+  mangaCover   String?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mangaUid])
+  @@index([userId])
+  @@index([mangaUid])
+}
+
+model Rating {
+  id           String   @id @default(uuid())
+  userId       String
+  mangaUid     String   // Contentstack manga UID
+  mangaSlug    String
+  rating       Int      // 1-5 stars
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mangaUid])
+  @@index([userId])
+  @@index([mangaUid])
+}
+
+model Subscription {
+  id               String   @id @default(uuid())
+  userId           String
+  mangaUid         String   // Contentstack manga UID
+  mangaSlug        String
+  mangaTitle       String
+  notifyNewChapter Boolean  @default(true) // Whether to send email on new chapter
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mangaUid])
+  @@index([userId])
+  @@index([mangaUid])
+}
+
+model ReadingProgress {
+  id                  String   @id @default(uuid())
+  userId              String
+  mangaUid            String
+  mangaSlug           String
+  mangaTitle          String
+  mangaCover          String?
+  lastChapterUid      String
+  lastChapterSlug     String
+  lastChapterNumber   Int
+  lastChapterTitle    String
+  totalChapters       Int
+  lastReadAt          DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mangaUid])
+  @@index([userId])
+  @@index([mangaUid])
+}
+
+// ============================================
+// ANALYTICS (Works for both guests and users)
+// ============================================
+
+model ViewHistory {
+  id           String   @id @default(uuid())
+  userId       String?  // Null for guest users
+  sessionId    String?  // For tracking guest sessions
+  mangaUid     String
+  mangaSlug    String
+  chapterUid   String?  // Null if viewing manga page only
+  chapterSlug  String?
+  viewedAt     DateTime @default(now())
+
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([mangaUid])
+  @@index([sessionId])
+  @@index([viewedAt])
+}
+
+// Aggregated manga stats (updated periodically or on-demand)
+model MangaStats {
+  id            String   @id @default(uuid())
+  mangaUid      String   @unique
+  mangaSlug     String
+  totalViews    Int      @default(0)
+  uniqueViewers Int      @default(0)
+  avgRating     Float    @default(0)
+  totalRatings  Int      @default(0)
+  totalBookmarks Int     @default(0)
+  totalSubscribers Int   @default(0)
+  updatedAt     DateTime @updatedAt
+
+  @@index([mangaUid])
+  @@index([mangaSlug])
+}
+
+// ============================================
+// NOTIFICATION LOGS
+// ============================================
+
+model NotificationLog {
+  id           String   @id @default(uuid())
+  userId       String
+  mangaUid     String
+  chapterUid   String
+  chapterTitle String
+  emailSentAt  DateTime @default(now())
+  status       String   // 'sent', 'failed', 'bounced'
+  errorMessage String?
+
+  @@index([userId])
+  @@index([mangaUid])
+  @@index([emailSentAt])
+}

@@ -1,0 +1,391 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Japanese-inspired Theme Variables */
+:root {
+  --vermillion: #e63946;
+  --vermillion-dark: #c41e3a;
+  --kiniro: #d4af37;
+  --sumi: #1a1a2e;
+  --sumi-light: #2a2a3d;
+  --sakura: #f9a8d4;
+  --washi: #faf8f5;
+}
+
+/* Custom Scrollbar - Japanese ink style */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(26, 26, 46, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--vermillion) 0%, var(--vermillion-dark) 100%);
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff6b6b 0%, var(--vermillion) 100%);
+}
+
+/* Hide scrollbar for reader */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Base Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sakuraFall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes inkSpread {
+  from {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+/* Shimmer animation for image loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    rgba(26, 26, 46, 0.8) 0%,
+    rgba(42, 42, 61, 0.8) 20%,
+    rgba(58, 58, 79, 0.8) 40%,
+    rgba(42, 42, 61, 0.8) 60%,
+    rgba(26, 26, 46, 0.8) 80%,
+    rgba(26, 26, 46, 0.8) 100%
+  );
+}
+
+/* Progressive image loading effect */
+.image-loading {
+  filter: blur(10px);
+  transform: scale(1.02);
+}
+
+.image-loaded {
+  filter: blur(0);
+  transform: scale(1);
+  transition: filter 0.3s ease-out, transform 0.3s ease-out;
+}
+
+/* Japanese Patterns */
+.pattern-seigaiha {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath fill='%23e63946' fill-opacity='0.03' d='M40 0c22.09 0 40 17.91 40 40S62.09 80 40 80 0 62.09 0 40 17.91 0 40 0zm0 6c-18.78 0-34 15.22-34 34s15.22 34 34 34 34-15.22 34-34S58.78 6 40 6zm0 6c15.46 0 28 12.54 28 28S55.46 68 40 68 12 55.46 12 40s12.54-28 28-28zm0 6c-12.15 0-22 9.85-22 22s9.85 22 22 22 22-9.85 22-22-9.85-22-22-22z'/%3E%3C/svg%3E");
+}
+
+.pattern-asanoha {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath fill='%23d4af37' fill-opacity='0.04' d='M30 0L60 30L30 60L0 30L30 0zM30 10L10 30L30 50L50 30L30 10z'/%3E%3C/svg%3E");
+}
+
+/* Ink brush stroke effect */
+.ink-stroke {
+  position: relative;
+}
+
+.ink-stroke::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--vermillion), transparent);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.ink-stroke:hover::after {
+  transform: scaleX(1);
+}
+
+/* Base styles */
+@layer base {
+  body {
+    @apply antialiased;
+    background-color: #0f0f1a;
+    color: #e4e4e9;
+  }
+
+  /* Smooth transitions for theme changes */
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background-color: rgba(230, 57, 70, 0.3);
+    color: #fff;
+  }
+
+  ::-moz-selection {
+    background-color: rgba(230, 57, 70, 0.3);
+    color: #fff;
+  }
+}
+
+/* Component styles */
+@layer components {
+  .prose {
+    max-width: none;
+  }
+  
+  .prose p {
+    line-height: 1.75;
+  }
+
+  /* Japanese card style */
+  .jp-card {
+    @apply relative overflow-hidden;
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.9) 0%, rgba(15, 15, 26, 0.95) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.1);
+  }
+
+  .jp-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--vermillion), var(--kiniro), transparent);
+  }
+
+  /* Gradient text */
+  .text-gradient-vermillion {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #ff6b6b 0%, #e63946 50%, #c41e3a 100%);
+  }
+
+  .text-gradient-kiniro {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #ece0a8 0%, #d4af37 50%, #a67b24 100%);
+  }
+
+  /* Japanese button style */
+  .btn-jp {
+    @apply relative overflow-hidden font-medium transition-all duration-300;
+    background: linear-gradient(135deg, #e63946 0%, #c41e3a 100%);
+    box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
+  }
+
+  .btn-jp:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
+  }
+
+  .btn-jp::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .btn-jp:hover::before {
+    left: 100%;
+  }
+
+  /* Gold accent button */
+  .btn-kiniro {
+    @apply relative overflow-hidden font-medium transition-all duration-300;
+    background: linear-gradient(135deg, #d4af37 0%, #a67b24 100%);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  }
+
+  .btn-kiniro:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+  }
+
+  /* Torii gate divider */
+  .torii-divider {
+    @apply relative py-8;
+  }
+
+  .torii-divider::before {
+    content: '⛩️';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    opacity: 0.5;
+  }
+
+  .torii-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(230, 57, 70, 0.3), transparent);
+  }
+}
+
+/* Range input styling - Japanese theme */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #e63946 0%, #c41e3a 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -5px;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.4);
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(26, 26, 46, 0.8), rgba(42, 42, 61, 0.8));
+  border-radius: 2px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #e63946 0%, #c41e3a 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.4);
+}
+
+input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(26, 26, 46, 0.8), rgba(42, 42, 61, 0.8));
+  border-radius: 2px;
+}
+
+/* Focus ring with Japanese theme */
+*:focus-visible {
+  outline: 2px solid rgba(230, 57, 70, 0.5);
+  outline-offset: 2px;
+}
+
+/* Glow effects */
+.glow-vermillion {
+  box-shadow: 0 0 20px rgba(230, 57, 70, 0.3), 0 0 40px rgba(230, 57, 70, 0.1);
+}
+
+.glow-kiniro {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 0 40px rgba(212, 175, 55, 0.1);
+}
+
+/* Decorative elements */
+.sakura-petal {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(ellipse at center, #f9a8d4 0%, #f472b6 100%);
+  border-radius: 100% 0 100% 0;
+  pointer-events: none;
+  animation: sakuraFall 10s linear infinite;
+  opacity: 0;
+}
+
+/* Dark glass effect */
+.glass-dark {
+  background: rgba(15, 15, 26, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+/* Light mode overrides */
+.light {
+  --vermillion: #c41e3a;
+  --kiniro: #a67b24;
+  --sumi: #faf8f5;
+}
+
+.light body {
+  background-color: #faf8f5;
+  color: #1a1a2e;
+}
+
+.light .glass-dark {
+  background: rgba(250, 248, 245, 0.9);
+  border: 1px solid rgba(26, 26, 46, 0.1);
+}
