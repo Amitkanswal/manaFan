@@ -10,10 +10,14 @@ export async function GET(request: NextRequest) {
     const authError = requireAuth(context);
     if (authError) return authError;
 
+    console.log('[API/subscriptions GET] Fetching for user:', context.user!.id);
+
     const subscriptions = await prisma.subscription.findMany({
       where: { userId: context.user!.id },
       orderBy: { createdAt: 'desc' },
     });
+
+    console.log('[API/subscriptions GET] Found subscriptions:', subscriptions);
 
     return NextResponse.json({ subscriptions });
   } catch (error) {
@@ -33,16 +37,10 @@ export async function POST(request: NextRequest) {
     const authError = requireAuth(context);
     if (authError) return authError;
 
-    // Check if user has opted in for email updates
-    if (!context.user!.emailUpdatesOptIn) {
-      return NextResponse.json(
-        { error: 'Please enable email notifications in your profile settings first' },
-        { status: 400 }
-      );
-    }
-
     const body = await request.json();
     const { mangaUid, mangaSlug, mangaTitle, notifyNewChapter = true } = body;
+
+    console.log('[API/subscriptions POST] Received:', { mangaUid, mangaSlug, mangaTitle, userId: context.user!.id });
 
     if (!mangaUid || !mangaSlug || !mangaTitle) {
       return NextResponse.json(
@@ -62,6 +60,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
+      console.log('[API/subscriptions POST] Already subscribed, updating:', existing.id);
       // Update notification preference
       const subscription = await prisma.subscription.update({
         where: { id: existing.id },
@@ -83,6 +82,8 @@ export async function POST(request: NextRequest) {
         notifyNewChapter,
       },
     });
+
+    console.log('[API/subscriptions POST] Created subscription:', subscription);
 
     // Update manga stats
     await prisma.mangaStats.upsert({

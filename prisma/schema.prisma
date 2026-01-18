@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ============================================
@@ -17,14 +17,14 @@ model User {
   id                String    @id @default(uuid())
   email             String    @unique
   name              String?
-  avatarUrl         String?
-  passwordHash      String?   // Null for magic link only users
-  emailVerified     Boolean   @default(false)
-  emailUpdatesOptIn Boolean   @default(false) // Whether user wants email notifications
+  avatarUrl         String?   @map("avatar_url")
+  passwordHash      String?   @map("password_hash") // Null for magic link only users
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  emailUpdatesOptIn Boolean   @default(false) @map("email_updates_opt_in") // Whether user wants email notifications
   
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  lastLoginAt       DateTime? @map("last_login_at")
 
   // Relations
   sessions          Session[]
@@ -36,35 +36,38 @@ model User {
   viewHistory       ViewHistory[]
 
   @@index([email])
+  @@map("users")
 }
 
 model Session {
   id           String   @id @default(uuid())
-  userId       String
+  userId       String   @map("user_id")
   token        String   @unique
-  userAgent    String?
-  ipAddress    String?
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
+  @@map("sessions")
 }
 
 model MagicLink {
   id           String   @id @default(uuid())
-  userId       String
+  userId       String   @map("user_id")
   token        String   @unique
-  expiresAt    DateTime
-  usedAt       DateTime?
-  createdAt    DateTime @default(now())
+  expiresAt    DateTime @map("expires_at")
+  usedAt       DateTime? @map("used_at")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
+  @@map("magic_links")
 }
 
 // ============================================
@@ -73,74 +76,78 @@ model MagicLink {
 
 model Bookmark {
   id           String   @id @default(uuid())
-  userId       String
-  mangaUid     String   // Contentstack manga UID
-  mangaSlug    String
-  mangaTitle   String
-  mangaCover   String?
-  createdAt    DateTime @default(now())
+  userId       String   @map("user_id")
+  mangaUid     String   @map("manga_uid") // Contentstack manga UID
+  mangaSlug    String   @map("manga_slug")
+  mangaTitle   String   @map("manga_title")
+  mangaCover   String?  @map("manga_cover")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, mangaUid])
   @@index([userId])
   @@index([mangaUid])
+  @@map("bookmarks")
 }
 
 model Rating {
   id           String   @id @default(uuid())
-  userId       String
-  mangaUid     String   // Contentstack manga UID
-  mangaSlug    String
+  userId       String   @map("user_id")
+  mangaUid     String   @map("manga_uid") // Contentstack manga UID
+  mangaSlug    String   @map("manga_slug")
   rating       Int      // 1-5 stars
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, mangaUid])
   @@index([userId])
   @@index([mangaUid])
+  @@map("ratings")
 }
 
 model Subscription {
   id               String   @id @default(uuid())
-  userId           String
-  mangaUid         String   // Contentstack manga UID
-  mangaSlug        String
-  mangaTitle       String
-  notifyNewChapter Boolean  @default(true) // Whether to send email on new chapter
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  userId           String   @map("user_id")
+  mangaUid         String   @map("manga_uid") // Contentstack manga UID
+  mangaSlug        String   @map("manga_slug")
+  mangaTitle       String   @map("manga_title")
+  notifyNewChapter Boolean  @default(true) @map("notify_new_chapter") // Whether to send email on new chapter
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, mangaUid])
   @@index([userId])
   @@index([mangaUid])
+  @@map("subscriptions")
 }
 
 model ReadingProgress {
   id                  String   @id @default(uuid())
-  userId              String
-  mangaUid            String
-  mangaSlug           String
-  mangaTitle          String
-  mangaCover          String?
-  lastChapterUid      String
-  lastChapterSlug     String
-  lastChapterNumber   Int
-  lastChapterTitle    String
-  totalChapters       Int
-  lastReadAt          DateTime @default(now())
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  userId              String   @map("user_id")
+  mangaUid            String   @map("manga_uid")
+  mangaSlug           String   @map("manga_slug")
+  mangaTitle          String   @map("manga_title")
+  mangaCover          String?  @map("manga_cover")
+  lastChapterUid      String   @map("last_chapter_uid")
+  lastChapterSlug     String   @map("last_chapter_slug")
+  lastChapterNumber   Int      @map("last_chapter_number")
+  lastChapterTitle    String   @map("last_chapter_title")
+  totalChapters       Int      @map("total_chapters")
+  lastReadAt          DateTime @default(now()) @map("last_read_at")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, mangaUid])
   @@index([userId])
   @@index([mangaUid])
+  @@map("reading_progress")
 }
 
 // ============================================
@@ -149,13 +156,13 @@ model ReadingProgress {
 
 model ViewHistory {
   id           String   @id @default(uuid())
-  userId       String?  // Null for guest users
-  sessionId    String?  // For tracking guest sessions
-  mangaUid     String
-  mangaSlug    String
-  chapterUid   String?  // Null if viewing manga page only
-  chapterSlug  String?
-  viewedAt     DateTime @default(now())
+  userId       String?  @map("user_id") // Null for guest users
+  sessionId    String?  @map("session_id") // For tracking guest sessions
+  mangaUid     String   @map("manga_uid")
+  mangaSlug    String   @map("manga_slug")
+  chapterUid   String?  @map("chapter_uid") // Null if viewing manga page only
+  chapterSlug  String?  @map("chapter_slug")
+  viewedAt     DateTime @default(now()) @map("viewed_at")
 
   user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -163,23 +170,25 @@ model ViewHistory {
   @@index([mangaUid])
   @@index([sessionId])
   @@index([viewedAt])
+  @@map("view_history")
 }
 
 // Aggregated manga stats (updated periodically or on-demand)
 model MangaStats {
   id            String   @id @default(uuid())
-  mangaUid      String   @unique
-  mangaSlug     String
-  totalViews    Int      @default(0)
-  uniqueViewers Int      @default(0)
-  avgRating     Float    @default(0)
-  totalRatings  Int      @default(0)
-  totalBookmarks Int     @default(0)
-  totalSubscribers Int   @default(0)
-  updatedAt     DateTime @updatedAt
+  mangaUid      String   @unique @map("manga_uid")
+  mangaSlug     String   @map("manga_slug")
+  totalViews    Int      @default(0) @map("total_views")
+  uniqueViewers Int      @default(0) @map("unique_viewers")
+  avgRating     Float    @default(0) @map("avg_rating")
+  totalRatings  Int      @default(0) @map("total_ratings")
+  totalBookmarks Int     @default(0) @map("total_bookmarks")
+  totalSubscribers Int   @default(0) @map("total_subscribers")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@index([mangaUid])
   @@index([mangaSlug])
+  @@map("manga_stats")
 }
 
 // ============================================
@@ -188,15 +197,16 @@ model MangaStats {
 
 model NotificationLog {
   id           String   @id @default(uuid())
-  userId       String
-  mangaUid     String
-  chapterUid   String
-  chapterTitle String
-  emailSentAt  DateTime @default(now())
+  userId       String   @map("user_id")
+  mangaUid     String   @map("manga_uid")
+  chapterUid   String   @map("chapter_uid")
+  chapterTitle String   @map("chapter_title")
+  emailSentAt  DateTime @default(now()) @map("email_sent_at")
   status       String   // 'sent', 'failed', 'bounced'
-  errorMessage String?
+  errorMessage String?  @map("error_message")
 
   @@index([userId])
   @@index([mangaUid])
   @@index([emailSentAt])
+  @@map("notification_logs")
 }
