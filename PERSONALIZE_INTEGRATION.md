@@ -10,7 +10,14 @@
 - ✅ Personalized hero content created & published
 - ✅ Personalized manga lists created & published
 
-**Remaining Step - Create Personalize Project (2 minutes):**
+**Code Setup - COMPLETED:**
+- ✅ Genre tracking via `PersonalizeProvider` with weighted scoring
+- ✅ `getSimilarManga()` API method using taxonomy queries
+- ✅ `SimilarMangaSection` component ("You Would Also Like")
+- ✅ `getRecommendedManga()` API method for weighted recommendations
+- ✅ Genre preference hooks (`useGenrePreferences`, `useGenreBasedVariant`)
+
+**Remaining Step - Create Personalize Project:**
 See **Quick Start** section below.
 
 ---
@@ -39,12 +46,30 @@ NEXT_PUBLIC_PERSONALIZE_PROJECT_UID=your_project_uid_here
 ### Step 4: Create Audiences
 In Personalize dashboard → **Audiences** → **+ Create Audience**:
 
+**Basic Audiences:**
+
 | Audience Name | Short ID | Condition |
 |--------------|----------|-----------|
 | New Users | `new_users` | `session_count` equals `1` |
 | Returning Users | `returning_users` | `session_count` greater than `1` |
-| Action Readers | `action_readers` | Custom attribute `favorite_genre` equals `action` |
-| Adventure Readers | `adventure_readers` | Custom attribute `favorite_genre` equals `adventure` |
+
+**Genre-Based Audiences (using custom attributes from code):**
+
+| Audience Name | Short ID | Condition |
+|--------------|----------|-----------|
+| Action Readers | `action_readers` | Custom attribute `has_read_action` equals `true` |
+| Adventure Readers | `adventure_readers` | Custom attribute `has_read_adventure` equals `true` |
+| Fantasy Readers | `fantasy_readers` | Custom attribute `has_read_fantasy` equals `true` |
+| Martial Arts Readers | `martial_arts_readers` | Custom attribute `has_read_martial_arts` equals `true` |
+| Comedy Readers | `comedy_readers` | Custom attribute `has_read_comedy` equals `true` |
+| Romance Readers | `romance_readers` | Custom attribute `has_read_romance` equals `true` |
+| Supernatural Readers | `supernatural_readers` | Custom attribute `has_read_supernatural` equals `true` |
+| Horror Readers | `horror_readers` | Custom attribute `has_read_horror` equals `true` |
+| Mystery Readers | `mystery_readers` | Custom attribute `has_read_mystery` equals `true` |
+| Slice of Life Readers | `slice_of_life_readers` | Custom attribute `has_read_slice_of_life` equals `true` |
+| Shonen Readers | `shonen_readers` | Custom attribute `has_read_shonen` equals `true` |
+| Reincarnation Readers | `reincarnation_readers` | Custom attribute `has_read_reincarnation` equals `true` |
+| Magic Readers | `magic_readers` | Custom attribute `has_read_magic` equals `true` |
 
 ### Step 5: Create Experiences
 In Personalize dashboard → **Experiences** → **+ Create Experience**:
@@ -60,6 +85,7 @@ In Personalize dashboard → **Experiences** → **+ Create Experience**:
 - Variants:
   - `action_fans` → Target: "Action Readers" audience
   - `adventure_fans` → Target: "Adventure Readers" audience
+  - `fantasy_fans` → Target: "Fantasy Readers" audience
   - `new_users` → Target: "New Users" audience (default)
 
 **Experience 3: Recommendations**
@@ -67,9 +93,81 @@ In Personalize dashboard → **Experiences** → **+ Create Experience**:
 - Variants:
   - `action_readers` → Target: "Action Readers" audience
   - `adventure_readers` → Target: "Adventure Readers" audience
+  - `fantasy_readers` → Target: "Fantasy Readers" audience
   - `new_users` → Target: "New Users" audience (default)
 
 **That's it!** The CMS content entries are already tagged with these experience/variant IDs.
+
+---
+
+## New Feature: Similar Manga ("You Would Also Like")
+
+### How It Works
+
+The app now tracks user genre preferences and shows similar manga on detail pages:
+
+```
+User visits Solo Leveling (Action, Adventure, Fantasy, Shonen)
+         │
+         ▼
+trackMangaRead() called with genres
+         │
+         ├─► genrePreferences Set updated (action, adventure, fantasy, shonen)
+         │
+         ├─► genreWeights Map updated (action: 1, adventure: 1, etc.)
+         │
+         └─► Personalize SDK attributes set (has_read_action: true, etc.)
+         
+On Manga Detail Page:
+         │
+         ▼
+SimilarMangaSection component
+         │
+         ├─► Calls getSimilarManga(genres, currentMangaId)
+         │
+         ├─► Contentstack API queries manga with matching genre taxonomies
+         │
+         ├─► Results scored by genre overlap count
+         │
+         └─► Displays "You Would Also Like" grid
+```
+
+### Key Components
+
+| Component/Hook | Location | Purpose |
+|---------------|----------|---------|
+| `SimilarMangaSection` | `src/components/SimilarMangaSection.tsx` | UI for similar manga |
+| `getSimilarManga()` | `src/lib/contentstack/api.ts` | API to fetch by genre taxonomy |
+| `getRecommendedManga()` | `src/lib/contentstack/api.ts` | Weighted recommendations |
+| `useGenrePreferences()` | `src/core/providers/personalize-provider.tsx` | Access genre weights |
+| `useGenreBasedVariant()` | `src/core/providers/personalize-provider.tsx` | Get variant ID from favorite genre |
+
+### Data Storage
+
+**localStorage keys:**
+- `mangafan_genre_preferences` - Array of genre strings (e.g., `["action", "adventure"]`)
+- `mangafan_genre_weights` - Object of genre -> count (e.g., `{"action": 3, "adventure": 2}`)
+- `mangafan_returning_user` - Boolean flag for returning users
+
+### Custom Attributes Sent to Personalize
+
+The app automatically sets these boolean attributes based on user reading:
+
+```typescript
+has_read_action: boolean
+has_read_adventure: boolean
+has_read_fantasy: boolean
+has_read_martial_arts: boolean
+has_read_comedy: boolean
+has_read_romance: boolean
+has_read_supernatural: boolean
+has_read_horror: boolean
+has_read_mystery: boolean
+has_read_slice_of_life: boolean
+has_read_shonen: boolean
+has_read_reincarnation: boolean
+has_read_magic: boolean
+```
 
 ---
 

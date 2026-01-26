@@ -11,6 +11,7 @@ import { StarRating } from '@/shared/components/star-rating';
 import { cn } from '@/shared/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useUserLibrary, useAuth, useBackendLibrary, useTrackMangaRead } from '@/core/providers';
+import { SimilarMangaSection } from '@/components/SimilarMangaSection';
 
 // Helper to format large numbers
 function formatNumber(num: number): string {
@@ -463,6 +464,14 @@ export default function MangaDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Similar Manga Section - "You Would Also Like" */}
+          <SimilarMangaSection 
+            currentMangaId={manga.id}
+            genres={manga.genres}
+            maxItems={6}
+            className="mt-8"
+          />
         </div>
 
         {/* Rating Modal */}

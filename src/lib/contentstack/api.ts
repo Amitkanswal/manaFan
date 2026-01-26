@@ -401,6 +401,185 @@ export const contentstackApi = {
   },
 
   // ============================================
+  // SIMILAR MANGA / RECOMMENDATIONS
+  // ============================================
+
+  /**
+   * Get similar manga based on genre overlap using taxonomy
+   * Scores results by number of matching genres
+   * @param genres - Array of genre names or term UIDs from current manga
+   * @param excludeUid - UID of current manga to exclude from results
+   * @param limit - Maximum number of results to return (default: 6)
+   */
+  async getSimilarManga(genres: string[], excludeUid: string, limit = 6): Promise<Manga[]> {
+    try {
+      if (!genres || genres.length === 0) {
+        return [];
+      }
+
+      // Normalize genres to term UIDs for comparison
+      const normalizedGenres = genres.map(g => 
+        g.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_')
+      );
+
+      // Fetch all manga entries with references
+      const mangaQuery = stack
+        .contentType(CONTENT_TYPES.MANGA)
+        .entry()
+        .includeReference(['author'])
+        .includeFallback()
+        .locale('en-us');
+
+      const mangaResponse = await mangaQuery.find<CSManga>();
+      const mangaEntries = mangaResponse.entries || [];
+
+      // Fetch all chapters for transformation
+      const chaptersQuery = stack
+        .contentType(CONTENT_TYPES.MANGA_LIST)
+        .entry()
+        .includeReference(['managa'])
+        .includeFallback()
+        .locale('en-us');
+
+      const chaptersResponse = await chaptersQuery.find<CSMangaList>();
+      const chapters = chaptersResponse.entries || [];
+
+      // Score and filter manga by genre overlap
+      const scoredManga: Array<{ manga: Manga; score: number }> = [];
+
+      for (const entry of mangaEntries) {
+        // Skip the current manga
+        if (entry.uid === excludeUid) {
+          continue;
+        }
+
+        // Extract genre term UIDs from this manga
+        const entryGenres = entry.taxonomies
+          ?.filter(t => t.taxonomy_uid === 'genre')
+          .map(t => t.term_uid.toLowerCase()) || [];
+
+        // Calculate overlap score (number of matching genres)
+        const overlapScore = normalizedGenres.filter(g => 
+          entryGenres.includes(g)
+        ).length;
+
+        // Only include if there's at least one matching genre
+        if (overlapScore > 0) {
+          const transformedManga = transformManga(entry, chapters);
+          scoredManga.push({
+            manga: transformedManga,
+            score: overlapScore,
+          });
+        }
+      }
+
+      // Sort by score (highest first), then by rating as secondary
+      scoredManga.sort((a, b) => {
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        // Secondary sort by rating
+        return b.manga.rating - a.manga.rating;
+      });
+
+      // Return top results
+      return scoredManga.slice(0, limit).map(item => item.manga);
+    } catch (error) {
+      console.error('Error fetching similar manga:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get manga recommendations based on user's genre preferences
+   * Uses weighted scoring based on user's reading history
+   * @param genrePreferences - Map of genre -> read count (weighted preferences)
+   * @param excludeUids - UIDs of manga to exclude (already read/viewed)
+   * @param limit - Maximum number of results
+   */
+  async getRecommendedManga(
+    genrePreferences: Map<string, number>,
+    excludeUids: string[] = [],
+    limit = 8
+  ): Promise<Manga[]> {
+    try {
+      if (genrePreferences.size === 0) {
+        // Return popular manga for new users
+        const allManga = await this.getMangaList();
+        return allManga
+          .filter(m => !excludeUids.includes(m.id))
+          .sort((a, b) => b.readers - a.readers)
+          .slice(0, limit);
+      }
+
+      // Fetch all manga
+      const mangaQuery = stack
+        .contentType(CONTENT_TYPES.MANGA)
+        .entry()
+        .includeReference(['author'])
+        .includeFallback()
+        .locale('en-us');
+
+      const mangaResponse = await mangaQuery.find<CSManga>();
+      const mangaEntries = mangaResponse.entries || [];
+
+      // Fetch chapters
+      const chaptersQuery = stack
+        .contentType(CONTENT_TYPES.MANGA_LIST)
+        .entry()
+        .includeReference(['managa'])
+        .includeFallback()
+        .locale('en-us');
+
+      const chaptersResponse = await chaptersQuery.find<CSMangaList>();
+      const chapters = chaptersResponse.entries || [];
+
+      // Score manga based on user preferences
+      const scoredManga: Array<{ manga: Manga; score: number }> = [];
+
+      for (const entry of mangaEntries) {
+        // Skip excluded manga
+        if (excludeUids.includes(entry.uid)) {
+          continue;
+        }
+
+        // Extract genre term UIDs
+        const entryGenres = entry.taxonomies
+          ?.filter(t => t.taxonomy_uid === 'genre')
+          .map(t => t.term_uid.toLowerCase().replace(/-/g, '_')) || [];
+
+        // Calculate weighted score based on user's genre preferences
+        let weightedScore = 0;
+        for (const genre of entryGenres) {
+          const preference = genrePreferences.get(genre) || 0;
+          weightedScore += preference;
+        }
+
+        if (weightedScore > 0) {
+          const transformedManga = transformManga(entry, chapters);
+          scoredManga.push({
+            manga: transformedManga,
+            score: weightedScore,
+          });
+        }
+      }
+
+      // Sort by weighted score, then by rating
+      scoredManga.sort((a, b) => {
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        return b.manga.rating - a.manga.rating;
+      });
+
+      return scoredManga.slice(0, limit).map(item => item.manga);
+    } catch (error) {
+      console.error('Error fetching recommended manga:', error);
+      return [];
+    }
+  },
+
+  // ============================================
   // PERSONALIZED CONTENT METHODS
   // ============================================
 

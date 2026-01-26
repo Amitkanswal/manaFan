@@ -60,4 +60,6 @@ export {
   usePersonalize,
   usePersonalizedVariant,
   useTrackMangaRead,
+  useGenrePreferences,
+  useGenreBasedVariant,
 } from './personalize-provider';
