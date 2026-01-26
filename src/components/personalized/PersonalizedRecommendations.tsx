@@ -60,14 +60,11 @@ export function PersonalizedRecommendations({
           }
         }
 
-        console.log('[Recommendations] Fetching for variant:', variantId);
-
         // Fetch personalized manga list from CMS
         const list = await contentstackApi.getPersonalizedMangaList('recommendations', variantId);
         
         if (list) {
           setRecommendations(list);
-          console.log('[Recommendations] Loaded:', list.section_title, 'with', list.manga_list.length, 'items');
         } else {
           // Fallback to new_users variant
           const fallback = await contentstackApi.getPersonalizedMangaList('recommendations', 'new_users');

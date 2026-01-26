@@ -125,7 +125,6 @@ export function BackendLibraryProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    console.log('[fetchLibrary] Fetching library data...');
     setState(prev => ({ ...prev, isLoading: true }));
 
     try {
@@ -135,8 +134,6 @@ export function BackendLibraryProvider({ children }: { children: ReactNode }) {
         subscriptionsApi.getAll(token),
         readingProgressApi.getAll(token),
       ]);
-
-      console.log('[fetchLibrary] Subscriptions API response:', subsRes);
 
       const bookmarks: Record<string, Bookmark> = {};
       const ratings: Record<string, Rating> = {};
@@ -152,15 +149,12 @@ export function BackendLibraryProvider({ children }: { children: ReactNode }) {
       });
 
       subsRes.data?.subscriptions?.forEach(s => {
-        console.log('[fetchLibrary] Processing subscription:', s);
         subscriptions[s.mangaUid] = s;
       });
 
       progressRes.data?.progress?.forEach(p => {
         readingProgress[p.mangaUid] = p;
       });
-
-      console.log('[fetchLibrary] Final subscriptions state:', subscriptions);
 
       setState({
         bookmarks,
@@ -282,26 +276,18 @@ export function BackendLibraryProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    console.log('[subscribe] Subscribing to manga:', manga);
     const response = await subscriptionsApi.subscribe(token, manga);
-    console.log('[subscribe] API response:', response);
     
     if (response.data?.subscription) {
-      console.log('[subscribe] Subscription created:', response.data.subscription);
-      setState(prev => {
-        const newState = {
-          ...prev,
-          subscriptions: {
-            ...prev.subscriptions,
-            [manga.mangaUid]: response.data!.subscription,
-          },
-        };
-        console.log('[subscribe] Updated subscriptions state:', newState.subscriptions);
-        return newState;
-      });
+      setState(prev => ({
+        ...prev,
+        subscriptions: {
+          ...prev.subscriptions,
+          [manga.mangaUid]: response.data!.subscription,
+        },
+      }));
       return true;
     }
-    console.error('[subscribe] Failed - no subscription in response:', response);
     return false;
   }, [token]);
 
@@ -320,9 +306,7 @@ export function BackendLibraryProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const isSubscribed = useCallback((mangaUid: string): boolean => {
-    const result = mangaUid in state.subscriptions;
-    console.log('[isSubscribed] Checking mangaUid:', mangaUid, '| Found:', result, '| Available keys:', Object.keys(state.subscriptions));
-    return result;
+    return mangaUid in state.subscriptions;
   }, [state.subscriptions]);
 
   // ============================================

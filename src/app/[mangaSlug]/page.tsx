@@ -72,7 +72,6 @@ export default function MangaDetailPage() {
       hasTrackedRef.current = true;
       // Track this manga's genres for personalization
       trackMangaRead(manga.id, manga.genres);
-      console.log('[MangaDetail] Tracked genre preferences:', manga.genres);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [manga?.id]); // Only depend on manga.id, not trackMangaRead
@@ -85,7 +84,6 @@ export default function MangaDetailPage() {
   
   // Use backend state if authenticated, otherwise local
   const mangaUid = manga?.id || mangaSlug;
-  console.log('[MangaDetail] mangaUid:', mangaUid, '| manga?.id:', manga?.id, '| mangaSlug:', mangaSlug);
   const isSubscribedToManga = isAuthenticated ? isSubscribed(mangaUid) : false;
   const isBookmarkedManga = isAuthenticated ? isBackendBookmarked(mangaUid) : localBookmarked;
 
@@ -156,7 +154,6 @@ export default function MangaDetailPage() {
 
   // Handle follow/subscribe toggle
   const handleToggleFollowUpdates = async () => {
-    console.log('[handleToggleFollowUpdates] isAuthenticated:', isAuthenticated, '| emailUpdatesOptIn:', user?.emailUpdatesOptIn, '| isSubscribedToManga:', isSubscribedToManga);
     
     if (!isAuthenticated) {
       requireAuth(pathname);
@@ -166,17 +163,13 @@ export default function MangaDetailPage() {
     setSubscribeLoading(true);
     try {
       if (isSubscribedToManga) {
-        console.log('[handleToggleFollowUpdates] Unsubscribing from:', mangaUid);
         const result = await unsubscribe(mangaUid);
-        console.log('[handleToggleFollowUpdates] Unsubscribe result:', result);
       } else {
-        console.log('[handleToggleFollowUpdates] Subscribing to:', { mangaUid, mangaSlug: manga.slug, mangaTitle: manga.title });
         const result = await subscribe({
           mangaUid: mangaUid,
           mangaSlug: manga.slug,
           mangaTitle: manga.title,
         });
-        console.log('[handleToggleFollowUpdates] Subscribe result:', result);
         
         // Show info message if email notifications are not enabled
         if (result && !user?.emailUpdatesOptIn) {

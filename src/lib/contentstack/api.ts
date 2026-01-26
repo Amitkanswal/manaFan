@@ -154,7 +154,6 @@ export const contentstackApi = {
         (filters?.genre ? filters.genre.toLowerCase().replace(/\s+/g, '_') : null);
       
       if (genreTermUid) {
-        console.log(`[Contentstack] Filtering by genre taxonomy: ${genreTermUid}`);
         mangaList = mangaList.filter(m => 
           m.genres.some(g => g.toLowerCase().replace(/\s+/g, '_') === genreTermUid)
         );
@@ -426,7 +425,6 @@ export const contentstackApi = {
       );
       
       if (!entry) {
-        console.log(`[Contentstack] No banner found for experience: ${experienceId}, variant: ${variantId}`);
         return null;
       }
 

@@ -92,8 +92,6 @@ export async function POST(request: NextRequest) {
     const mangaTitle = mangaRef.title || 'Unknown Manga';
     const mangaSlug = chapterUrl.split('/')[0] || mangaUid;
 
-    console.log(`Processing new chapter notification for ${mangaTitle} - ${chapterTitle}`);
-
     // Find all users subscribed to this manga with notifications enabled
     const subscriptions = await prisma.subscription.findMany({
       where: {
@@ -116,8 +114,6 @@ export async function POST(request: NextRequest) {
     const eligibleSubscriptions = subscriptions.filter(
       sub => sub.user.emailUpdatesOptIn
     );
-
-    console.log(`Found ${eligibleSubscriptions.length} subscribers to notify`);
 
     // Send notifications in batches
     const batchSize = 10;
@@ -162,8 +158,6 @@ export async function POST(request: NextRequest) {
         }
       });
     }
-
-    console.log(`Notification results: ${successCount} sent, ${failCount} failed`);
 
     return NextResponse.json({
       message: 'Notifications processed',

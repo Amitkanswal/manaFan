@@ -9,6 +9,10 @@ import { mangaApi as mockApi } from '../services/api';
 const USE_CMS = process.env.NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN && 
                 process.env.NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN !== 'YOUR_DELIVERY_TOKEN_HERE';
 
+// Flag to use CMA API routes (new approach) - only enable when env var is set
+// Set NEXT_PUBLIC_USE_CMA=true in .env.local to enable CMA
+const USE_CMA = process.env.NEXT_PUBLIC_USE_CMA === 'true';
+
 export function useMangaList(filters?: MangaFilters) {
   const [data, setData] = useState<Manga[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +28,37 @@ export function useMangaList(filters?: MangaFilters) {
       try {
         let result: Manga[];
         
-        if (USE_CMS) {
+        if (USE_CMA) {
+          // Use new CMA-based API routes
+          const hasFilters = filters?.genre || filters?.status || filters?.statusTermUid;
+          
+          if (hasFilters) {
+            // Use taxonomy filter endpoint when filters are applied
+            const params = new URLSearchParams();
+            if (filters?.genre) params.append('genre', filters.genre);
+            // Use statusTermUid if available, otherwise convert status name to termUid
+            if (filters?.statusTermUid) {
+              params.append('status', filters.statusTermUid);
+            } else if (filters?.status) {
+              params.append('status', filters.status.toLowerCase());
+            }
+            if (filters?.searchQuery) params.append('search', filters.searchQuery);
+            
+            const response = await fetch(`/api/manga/filter?${params.toString()}`);
+            if (!response.ok) throw new Error('Failed to fetch filtered manga');
+            const data = await response.json();
+            result = data.entries || [];
+          } else {
+            // Use entries endpoint for all manga (no filters)
+            const params = new URLSearchParams();
+            if (filters?.searchQuery) params.append('search', filters.searchQuery);
+            
+            const response = await fetch(`/api/manga/entries?${params.toString()}`);
+            if (!response.ok) throw new Error('Failed to fetch manga entries');
+            const data = await response.json();
+            result = data.entries || [];
+          }
+        } else if (USE_CMS) {
           result = await contentstackApi.getMangaList(filters);
         } else {
           result = await mockApi.getAll(filters);
@@ -35,8 +69,14 @@ export function useMangaList(filters?: MangaFilters) {
         console.error('Error fetching manga list:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch manga'));
         try {
-          const fallback = await mockApi.getAll(filters);
-          setData(fallback);
+          // Fallback to delivery SDK or mock data
+          if (USE_CMS) {
+            const fallback = await contentstackApi.getMangaList(filters);
+            setData(fallback);
+          } else {
+            const fallback = await mockApi.getAll(filters);
+            setData(fallback);
+          }
         } catch {
           setData([]);
         }
@@ -150,7 +190,13 @@ export function useGenres() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (USE_CMS) {
+        if (USE_CMA) {
+          // Fetch genres from CMA taxonomy API
+          const response = await fetch('/api/manga/taxonomies?type=genre');
+          if (!response.ok) throw new Error('Failed to fetch genres');
+          const result = await response.json();
+          setData(result.genres || []);
+        } else if (USE_CMS) {
           // Fetch genres from Contentstack taxonomy
           const result = await contentstackApi.getGenres();
           setData(result);
@@ -166,12 +212,18 @@ export function useGenres() {
       } catch (err) {
         console.error('Error fetching genres:', err);
         try {
-          const fallbackGenres = await mockApi.getGenres();
-          const genreTerms: GenreTerm[] = fallbackGenres.map(name => ({
-            name,
-            termUid: name.toLowerCase().replace(/\s+/g, '_')
-          }));
-          setData(genreTerms);
+          // Fallback to delivery SDK
+          if (USE_CMS) {
+            const result = await contentstackApi.getGenres();
+            setData(result);
+          } else {
+            const fallbackGenres = await mockApi.getGenres();
+            const genreTerms: GenreTerm[] = fallbackGenres.map(name => ({
+              name,
+              termUid: name.toLowerCase().replace(/\s+/g, '_')
+            }));
+            setData(genreTerms);
+          }
         } catch {
           setData([]);
         }
@@ -193,7 +245,13 @@ export function useStatuses() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (USE_CMS) {
+        if (USE_CMA) {
+          // Fetch statuses from CMA taxonomy API
+          const response = await fetch('/api/manga/taxonomies?type=status');
+          if (!response.ok) throw new Error('Failed to fetch statuses');
+          const result = await response.json();
+          setData(result.statuses || []);
+        } else if (USE_CMS) {
           const result = await contentstackApi.getStatuses();
           setData(result);
         } else {

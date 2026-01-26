@@ -73,7 +73,6 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
         try {
           const genres = JSON.parse(storedGenres) as string[];
           setGenrePreferences(new Set(genres));
-          console.log('[Personalize] Loaded stored genre preferences:', genres);
         } catch (e) {
           console.warn('[Personalize] Could not parse stored genres');
         }
@@ -89,12 +88,9 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
 
     const initializePersonalize = async () => {
       try {
-        console.log('[Personalize] Initializing with project:', projectUid);
-        
         // Initialize the SDK
         await Personalize.init(projectUid);
         
-        console.log('[Personalize] SDK initialized successfully');
         setIsInitialized(true);
 
         // Set attributes for stored genres if we have them
@@ -112,7 +108,6 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
             
             if (Object.keys(attributes).length > 0) {
               Personalize.set(attributes);
-              console.log('[Personalize] Set genre attributes:', attributes);
             }
           } catch (e) {
             console.warn('[Personalize] Could not set genre attributes');
@@ -122,7 +117,6 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
         // Get active experiences/variants
         try {
           const experiences = Personalize.getExperiences();
-          console.log('[Personalize] Active experiences:', experiences);
           
           // Convert to variant map
           const variants: Record<string, string> = {};
@@ -157,8 +151,6 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
       return;
     }
 
-    console.log('[Personalize] Tracking manga read:', mangaId, 'genres:', genres);
-
     const attributes: Record<string, boolean> = {};
 
     // Update local genre preferences using functional update (avoids dependency)
@@ -192,18 +184,16 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
     if (Object.keys(attributes).length > 0) {
       try {
         Personalize.set(attributes);
-        console.log('[Personalize] Set genre attributes:', attributes);
       } catch (err) {
-        console.error('[Personalize] Error setting attributes:', err);
+        // Error setting attributes
       }
     }
 
     // Trigger the past_read event
     try {
       Personalize.triggerEvent('past_read');
-      console.log('[Personalize] Triggered past_read event');
     } catch (err) {
-      console.error('[Personalize] Error triggering event:', err);
+      // Error triggering event
     }
 
     // Refresh experiences after attribute change
@@ -217,9 +207,8 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
           });
         }
         setActiveVariants(variants);
-        console.log('[Personalize] Updated variants after read:', variants);
       } catch (err) {
-        console.warn('[Personalize] Could not refresh experiences:', err);
+        // Could not refresh experiences
       }
     }, 100);
   }, [isInitialized]); // Removed genrePreferences from dependencies
@@ -230,9 +219,8 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
     
     try {
       // Could be used for analytics
-      console.log('[Personalize] Page view:', page);
     } catch (err) {
-      console.error('[Personalize] Error tracking page view:', err);
+      // Error tracking page view
     }
   }, [isInitialized]);
 
@@ -253,9 +241,6 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
       // User is returning if they have the flag OR have read any manga (has genre preferences)
       if (isReturning || hasGenres) {
         setIsReturningUserState(true);
-        console.log('[Personalize] User identified as RETURNING');
-      } else {
-        console.log('[Personalize] User identified as NEW');
       }
     }
   }, []);

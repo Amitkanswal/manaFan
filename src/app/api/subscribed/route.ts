@@ -62,8 +62,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[API/subscribed GET] Searching for manga:', mangaName);
-    
     const subscriptions = await prisma.subscription.findMany({
       where: {
         OR: [
@@ -83,8 +81,6 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-    
-    console.log('[API/subscribed GET] Found subscriptions:', subscriptions.length);
 
     const emails = subscriptions.map((sub) => sub.user.email);
 
@@ -136,8 +132,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[API/subscribed POST] Searching for manga:', mangaName, '| notifyOnly:', notifyOnly);
-    
     const whereClause: any = {
       OR: [
         { mangaTitle: { contains: mangaName, mode: 'insensitive' } },
@@ -164,8 +158,6 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-    
-    console.log('[API/subscribed POST] Found subscriptions:', subscriptions.length);
 
     const emails = subscriptions.map((sub) => sub.user.email);
 

@@ -92,20 +92,16 @@ export function WelcomeBanner() {
           variantId = 'returning_user';
         }
 
-        console.log('[WelcomeBanner] Using variant:', variantId, 'isNewUser:', isNewUser, 'isReturningUser:', isReturningUser);
-
         // Try to fetch from CMS
         try {
           const response = await contentstackApi.getPersonalizedBanner('welcome_exp', variantId);
           if (response) {
             setBanner(response);
-            console.log('[WelcomeBanner] Loaded CMS content:', response);
           } else {
             // Use default
             setBanner(defaultBanners[variantId] || defaultBanners.new_user);
           }
         } catch (cmsError) {
-          console.warn('[WelcomeBanner] CMS fetch failed, using default:', cmsError);
           setBanner(defaultBanners[variantId] || defaultBanners.new_user);
         }
       } catch (error) {
