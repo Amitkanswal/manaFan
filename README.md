@@ -4,7 +4,7 @@ A modern, feature-rich manga reading platform built with Next.js 14, featuring p
 
 ![MangaFan Banner](https://placehold.co/1200x400/1a1a2e/FFFFFF?text=MangaFan+-+Your+Manga+Reading+Destination)
 
-> 🔗 **[Live Demo: manafan.com]([https://manga-fan.vercel.app/])**
+> 🔗 **[https://manga-fan.vercel.app/](https://manga-fan.vercel.app/)**
 
 ## ✨ Features
 
